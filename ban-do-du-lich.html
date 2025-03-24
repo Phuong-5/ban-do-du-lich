@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bản đồ Phường 5</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        #map { height: 500px; }
+        .popup-img { width: 100px; height: 100px; border-radius: 10px; object-fit: cover; }
+    </style>
+</head>
+<body>
+    <h1>Bản đồ các điểm đến du lịch Phường 5</h1>
+    <div id="map"></div>
+    <script>
+        var map = L.map('map').setView([10.762622, 106.660172], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        // Link CSV từ Google Sheets
+        var sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZpvmiU7kOaeFAG9sevuBQSK09TtzCgtup51T-XHg5ernaqxd-j9_RCsKcCrrDL_e8Ohjvv6EshzXg/pub?gid=0&single=true&output=csv";
+
+        // Đọc dữ liệu từ Google Sheets
+        fetch(sheetURL)
+            .then(response => response.text())
+            .then(csvText => {
+                Papa.parse(csvText, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        results.data.forEach(m => {
+                            // Hiển thị marker với hình ảnh
+                            L.marker([m.Latitude, m.Longitude])
+                                .addTo(map)
+                                .bindPopup(`
+                                    <b>${m.Name}</b><br>
+                                    ${m.Address}<br>
+                                    <img src="${m.Image}" class="popup-img">
+                                `);
+                        });
+                    }
+                });
+            });
+    </script>
+</body>
+</html>
