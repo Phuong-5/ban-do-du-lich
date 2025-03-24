@@ -1,1 +1,0 @@
-# ban-do-du-lich
