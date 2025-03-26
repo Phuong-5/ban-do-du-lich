@@ -8,41 +8,309 @@
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        #map { height: 500px; }
-        .popup-img { width: 100px; height: 100px; border-radius: 10px; object-fit: cover; }
+        /* 🔹 Layout chuẩn */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: row;
+        }
+        #sidebar {
+            width: 250px;
+            background: #fff;
+            padding: 15px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            display: none;
+            flex-direction: column;
+            align-items: center; /* Chỉnh từ left -> flex-start */
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            z-index: 1000;
+        }
+
+        #sidebar-name {
+            margin-bottom: 15px; /* Giảm khoảng cách dưới */
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 1.2; /* Điều chỉnh khoảng cách dòng */
+        }
+
+        #sidebar-address {
+            margin-top: 0px; /* Giảm khoảng cách trên */
+            font-size: 16px;
+            color: #555;
+            line-height: 1.2;
+            margin-bottom: 0px;
+        }
+        .sidebar-note {
+            margin-top: 0px; /* Giảm khoảng cách với địa chỉ */
+            font-style: italic; /* (Tuỳ chọn) Làm ghi chú nghiêng để nổi bật */
+            color: gray; /* (Tuỳ chọn) Đổi màu ghi chú */
+        }
+        #map {
+            flex: 1;
+            height: 100vh;
+            min-width: 0;
+            display: block;
+        }
+        .locate-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 18px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .close-btn {
+            background: red;
+            color: white;
+            border: none;
+            padding: 2px 4px;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 50px;
+            position: absolute;
+            top: 6px;
+            right: 8px;
+        }
+        .images-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: left;
+        }
+        .sidebar-image {
+            width: 95%;
+            max-height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        .marker-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50% !important;
+            aspect-ratio: 1 / 1;  /* Đảm bảo luôn là hình vuông */
+            object-fit: cover;
+        }
+        .marker-image {
+            width: 100px;
+            height: auto;
+            border-radius: 10px;
+            margin-top: 5px;
+        }
+        .marker-extra-images {
+            display: flex;
+            gap: 3px;
+            justify-content: left;
+            margin-top: 5px;
+        }
+        /* 🆕 Modal hiển thị ảnh khi click */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+        }
+
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
     </style>
 </head>
 <body>
-    <h1>Bản đồ các điểm đến du lịch Phường 5</h1>
+    <div id="sidebar">
+        <button class="close-btn" onclick="hideSidebar()">✖</button>
+        <h2>Thông tin điểm đến</h2>
+        <img id="sidebar-avatar" class="sidebar-image" style="width: 90%; max-height: 150px; object-fit: cover; border-radius: 10px;">
+        <h3 id="sidebar-name"></h3> <!-- Tên địa điểm-->
+        <p id="sidebar-address"></p> <!-- Địa chỉ-->
+        <p id="sidebar-note"></p> <!-- Ghi chú -->
+        <div class="images-container" id="sidebar-images"></div>
+    </div>
     <div id="map"></div>
+    <button class="locate-btn" onclick="locateUser()">📍</button>
+
+    <!-- 🆕 Modal để hiển thị ảnh -->
+    <div id="imageModal" class="modal">
+        <!-- Dấu "X" để đóng modal -->
+        <span class="close" onclick="closeModal()">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+
     <script>
-        var map = L.map('map').setView([10.762622, 106.660172], 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        document.addEventListener("DOMContentLoaded", function () {
+            let sidebar = document.getElementById("sidebar");
+            let sidebarImages = document.getElementById("sidebar-images");
 
-        // Link CSV từ Google Sheets
-        var sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZpvmiU7kOaeFAG9sevuBQSK09TtzCgtup51T-XHg5ernaqxd-j9_RCsKcCrrDL_e8Ohjvv6EshzXg/pub?gid=0&single=true&output=csv";
+            const map = L.map('map', {
+                zoomControl: false,
+                minZoom: 17,
+                maxZoom: 18
+            }).setView([10.760000, 106.660000], 16)
+              .setMaxBounds([[10.754345, 106.664810], [10.748590, 106.679998]])
+              .fitBounds([[10.754345, 106.664810], [10.748590, 106.679998]]);
 
-        // Đọc dữ liệu từ Google Sheets
-        fetch(sheetURL)
-            .then(response => response.text())
-            .then(csvText => {
-                Papa.parse(csvText, {
-                    header: true,
-                    skipEmptyLines: true,
-                    complete: function(results) {
-                        results.data.forEach(m => {
-                            // Hiển thị marker với hình ảnh
-                            L.marker([m.Latitude, m.Longitude])
-                                .addTo(map)
-                                .bindPopup(`
-                                    <b>${m.Name}</b><br>
-                                    ${m.Address}<br>
-                                    <img src="${m.Image}" class="popup-img">
-                                `);
-                        });
-                    }
+            L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap France'
+            }).addTo(map);
+
+            var sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZpvmiU7kOaeFAG9sevuBQSK09TtzCgtup51T-XHg5ernaqxd-j9_RCsKcCrrDL_e8Ohjvv6EshzXg/pub?gid=0&single=true&output=csv";
+
+            fetch(sheetURL)
+                .then(response => response.text())
+                .then(csvText => {
+                    Papa.parse(csvText, {
+                        header: true,
+                        skipEmptyLines: true,
+                        complete: function(results) {
+                            results.data.forEach(m => {
+                                let lat = parseFloat(m.Latitude?.trim()?.replace(',', '.'));
+                                let lng = parseFloat(m.Longitude?.trim()?.replace(',', '.'));
+
+                                if (isNaN(lat) || isNaN(lng)) return;
+
+                                let images = m.Image ? m.Image.split(",").map(img => img.trim()) : [];
+                                let avatar = images.length > 0 ? images[0] : "https://placehold.co/100"; // Ảnh mặc định nếu thiếu
+
+                                let icon = L.divIcon({
+                                    className: '',
+                                    html: `<div style="text-align:center;">
+                                            <img src="${avatar}" class="marker-avatar">
+                                            <div><b>${m.Name}</b></div>
+                                        </div>`,
+                                    iconSize: [100, 80]
+                                });
+
+                                let marker = L.marker([lat, lng], { icon }).addTo(map);
+                                
+                                marker.on("click", () => {
+                                    showSidebar(m);
+                                });
+                            });
+                        }
+                    });
                 });
+
+                function showSidebar(data) {
+                document.getElementById("sidebar-name").innerText = data.Name || "Không có tên";
+                document.getElementById("sidebar-address").innerText = data.Address || "Không có địa chỉ";
+                document.getElementById("sidebar-note").innerText = data.Note || "Không có ghi chú"; // Thêm ghi chú
+
+                let sidebarImages = document.getElementById("sidebar-images");
+                sidebarImages.innerHTML = ""; // Xóa ảnh cũ
+
+                let images = data.Image ? data.Image.split(",").map(img => img.trim()) : [];
+
+                // Nếu có ảnh, hiển thị ảnh đầu tiên như avatar trên cùng
+                let avatar = images.length > 0 ? images[0] : "https://placehold.co/100";
+                let sidebarAvatar = document.getElementById("sidebar-avatar");
+                sidebarAvatar.src = avatar;
+                sidebarAvatar.onclick = function() { openModal(avatar); }; // 🆕 Thêm sự kiện mở modal
+
+                // Hiển thị các ảnh còn lại xuống dưới địa chỉ
+                let otherImages = images.slice(1);
+                if (otherImages.length === 0) {
+                    sidebarImages.innerHTML = "<p>Không có hình ảnh</p>";
+                } else {
+                    otherImages.forEach(imgSrc => {
+                        let img = document.createElement("img");
+                        img.src = imgSrc;
+                        img.className = "sidebar-image clickable-image";
+                        img.onclick = function() { openModal(imgSrc); }; // 🆕 Thêm sự kiện mở modal
+                        sidebarImages.appendChild(img);
+                    });
+                }
+
+                document.getElementById("sidebar").style.display = "flex";
+            }
+
+
+            function openModal(imageSrc) {
+                let modal = document.getElementById("imageModal");
+                let modalImg = document.getElementById("modalImage");
+                modal.style.display = "flex";
+                modalImg.src = imageSrc;
+            }
+
+            // 🆕 Hàm đóng modal khi nhấn vào vùng ngoài ảnh
+            function closeModal() {
+                let modal = document.getElementById("imageModal");
+                modal.style.display = "none";
+            }
+
+            // 🆕 Đóng modal nếu nhấn ra ngoài ảnh
+            document.getElementById("imageModal").addEventListener("click", function(event) {
+                if (event.target === this) {
+                    closeModal();
+                }
             });
+            // 🆕 Gán hàm vào window để đảm bảo có thể gọi từ HTML
+            window.closeModal = closeModal;
+
+            function hideSidebar() {
+                sidebar.style.display = "none";
+            }
+
+            function locateUser() {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const userLocation = [position.coords.latitude, position.coords.longitude];
+                            L.marker(userLocation, { title: "Vị trí của bạn" })
+                                .addTo(map)
+                                .bindPopup("Bạn đang ở đây!")
+                                .openPopup();
+                            map.setView(userLocation, 18);
+                        },
+                        () => {
+                            alert("Không thể xác định vị trí của bạn!");
+                        }
+                    );
+                } else {
+                    alert("Trình duyệt không hỗ trợ định vị!");
+                }
+            }
+
+            window.locateUser = locateUser;
+            window.hideSidebar = hideSidebar;
+        });
     </script>
 </body>
 </html>
