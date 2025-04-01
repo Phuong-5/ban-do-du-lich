@@ -207,7 +207,7 @@
         </div>
         
         <button class="close-btn" onclick="hideSidebar()">✖</button>
-        <button id="directions-btn" class="directions-btn" onclick="getDirections()">🛣 Chỉ đường</button>
+        <button id="directions-btn" class="directions-btn" onclick="getDirections()">🛣 Đường đi</button>
         <h2>Bản đồ du lịch Phường 5</h2>
         <img id="sidebar-avatar" class="sidebar-image" style="width: 90%; max-height: 150px; object-fit: cover; border-radius: 10px;">
         <h3 id="sidebar-name"></h3> <!-- Tên địa điểm-->
@@ -401,6 +401,7 @@
                     alert("Trình duyệt không hỗ trợ định vị!");
                 }
             }
+
             function getDirections() {
                 if (!selectedMarker || !selectedMarker.data) {
                     alert("Vui lòng chọn một địa điểm!");
@@ -415,21 +416,28 @@
                     return;
                 }
 
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            let userLat = position.coords.latitude;
-                            let userLng = position.coords.longitude;
-                            let googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${lat},${lng}&travelmode=driving`;
-                            window.open(googleMapsUrl, "_blank");
-                        },
-                        () => {
-                            alert("Không thể xác định vị trí của bạn!");
-                        }
-                    );
-                } else {
+                // Kiểm tra xem trình duyệt có hỗ trợ geolocation không
+                if (!navigator.geolocation) {
                     alert("Trình duyệt không hỗ trợ định vị!");
+                    return;
                 }
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        let userLat = position.coords.latitude;
+                        let userLng = position.coords.longitude;
+                        console.log("Vị trí hiện tại:", userLat, userLng); // Debug
+
+                        let googleMapsUrl = `https://www.google.com/maps/dir/${userLat},${userLng}/${lat},${lng}/`;
+                        console.log("URL Google Maps:", googleMapsUrl); // Debug
+
+                        window.open(googleMapsUrl, "_blank");
+                    },
+                    (error) => {
+                        console.error("Lỗi định vị:", error);
+                        alert("Không thể xác định vị trí của bạn! Hãy kiểm tra quyền truy cập vị trí.");
+                    }
+                );
             }
 
             // Gọi loadMarkers khi trang load
@@ -441,7 +449,8 @@
             window.locateUser = locateUser;
             window.hideSidebar = hideSidebar;
             window.changeLanguage = changeLanguage;
-
+            window.getDirections = getDirections;
+            
             loadMarkers(); // Gọi khi trang load
         });
     </script>
