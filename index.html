@@ -4,9 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thông tin bản đồ du lịch Phường 5</title>
+    <!-- Thêm CSS của Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <!-- Thêm CSS của Leaflet Routing Machine -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+    <!-- Thêm JS của Leaflet -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <!-- Thêm JS của PapaParse để phân tích dữ liệu CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <!-- Thêm JS của Leaflet Routing Machine -->
+    <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+
     <style>
         /* 🔹 Layout chuẩn */
         html, body {
@@ -426,12 +434,22 @@
                     (position) => {
                         let userLat = position.coords.latitude;
                         let userLng = position.coords.longitude;
-                        console.log("Vị trí hiện tại:", userLat, userLng); // Debug
 
-                        let googleMapsUrl = `https://www.google.com/maps/dir/${userLat},${userLng}/${lat},${lng}/`;
-                        console.log("URL Google Maps:", googleMapsUrl); // Debug
+                        // Tạo route từ vị trí người dùng đến điểm chọn
+                        let userLocation = [userLat, userLng];
+                        let destination = [lat, lng];
 
-                        window.open(googleMapsUrl, "_blank");
+                        // Vẽ chỉ đường trên bản đồ
+                        L.Routing.control({
+                            waypoints: [
+                                L.latLng(userLocation), // Vị trí người dùng
+                                L.latLng(destination)    // Vị trí điểm chọn
+                            ],
+                            routeWhileDragging: true // Cung cấp chức năng kéo thả trên đường đi
+                        }).addTo(map);
+
+                        // Di chuyển bản đồ về vị trí của người dùng
+                        map.setView(userLocation, 16);
                     },
                     (error) => {
                         console.error("Lỗi định vị:", error);
@@ -450,7 +468,7 @@
             window.hideSidebar = hideSidebar;
             window.changeLanguage = changeLanguage;
             window.getDirections = getDirections;
-            
+
             loadMarkers(); // Gọi khi trang load
         });
     </script>
