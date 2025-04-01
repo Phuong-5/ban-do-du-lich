@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bản đồ Phường 5</title>
+    <title>Thông tin bản đồ du lịch Phường 5</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
@@ -19,7 +19,7 @@
             flex-direction: row;
         }
         #sidebar {
-            width: 250px;
+            width: 300px;
             background: #fff;
             padding: 15px;
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
@@ -177,6 +177,20 @@
             font-size: 18px;
             cursor: pointer;
         }
+        .directions-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 5px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .directions-btn:hover {
+            background: #0056b3;
+        }
 
 
     </style>
@@ -193,7 +207,8 @@
         </div>
         
         <button class="close-btn" onclick="hideSidebar()">✖</button>
-        <h2>Thông tin điểm đến</h2>
+        <button id="directions-btn" class="directions-btn" onclick="getDirections()">🛣 Chỉ đường</button>
+        <h2>Bản đồ du lịch Phường 5</h2>
         <img id="sidebar-avatar" class="sidebar-image" style="width: 90%; max-height: 150px; object-fit: cover; border-radius: 10px;">
         <h3 id="sidebar-name"></h3> <!-- Tên địa điểm-->
         <p id="sidebar-address"></p> <!-- Địa chỉ-->
@@ -202,8 +217,6 @@
     </div>
     <div id="map"></div>
     <button class="locate-btn" onclick="locateUser()">📍</button>
-
-    
     
     <!-- 🆕 Modal để hiển thị ảnh -->
     <div id="imageModal" class="modal">
@@ -222,11 +235,12 @@
                 minZoom: 17,
                 maxZoom: 18
             }).setView([10.760000, 106.660000], 16)
-              .setMaxBounds([[10.754345, 106.664810], [10.748590, 106.679998]]);
+              .setMaxBounds([[10.754359, 106.662622], [10.748590, 106.679998]]);
     
-            L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap France'
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
             }).addTo(map);
+
     
             var sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZpvmiU7kOaeFAG9sevuBQSK09TtzCgtup51T-XHg5ernaqxd-j9_RCsKcCrrDL_e8Ohjvv6EshzXg/pub?gid=0&single=true&output=csv";
 
@@ -321,8 +335,11 @@
                         sidebarImages.appendChild(img);
                     });
                 }
-
+                // Hiển thị sidebar
                 document.getElementById("sidebar").style.display = "flex";
+
+                // Hiển thị nút chỉ đường
+                document.getElementById("directions-btn").style.display = "block";
             }
 
             // Cập nhật sidebar khi đổi ngôn ngữ
@@ -375,6 +392,36 @@
                                 .bindPopup("Bạn đang ở đây!")
                                 .openPopup();
                             map.setView(userLocation, 18);
+                        },
+                        () => {
+                            alert("Không thể xác định vị trí của bạn!");
+                        }
+                    );
+                } else {
+                    alert("Trình duyệt không hỗ trợ định vị!");
+                }
+            }
+            function getDirections() {
+                if (!selectedMarker || !selectedMarker.data) {
+                    alert("Vui lòng chọn một địa điểm!");
+                    return;
+                }
+
+                let lat = parseFloat(selectedMarker.data.Latitude?.trim()?.replace(',', '.'));
+                let lng = parseFloat(selectedMarker.data.Longitude?.trim()?.replace(',', '.'));
+
+                if (isNaN(lat) || isNaN(lng)) {
+                    alert("Không tìm thấy vị trí của điểm này!");
+                    return;
+                }
+
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            let userLat = position.coords.latitude;
+                            let userLng = position.coords.longitude;
+                            let googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${lat},${lng}&travelmode=driving`;
+                            window.open(googleMapsUrl, "_blank");
                         },
                         () => {
                             alert("Không thể xác định vị trí của bạn!");
