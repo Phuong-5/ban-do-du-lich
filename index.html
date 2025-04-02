@@ -212,11 +212,6 @@
                 <option value="en">🇬🇧 English</option>
                 <option value="zh">🇨🇳 中文</option>
             </select>
-            <select id="travel-mode">
-                <option value="walking">🚶 Đi bộ</option>
-                <option value="cycling">🚴 Xe đạp</option>
-                <option value="driving">🚗 Ô tô</option>
-            </select>
         </div>
         
         <button class="close-btn" onclick="hideSidebar()">✖</button>
@@ -228,10 +223,6 @@
         <p id="sidebar-note"></p> <!-- Ghi chú -->
         <div class="images-container" id="sidebar-images"></div>
     </div>
-    <div id="route-info"></div>
-    <div id="route-steps"></div>
-    <button id="clear-route-btn" onclick="clearRoute()" style="display:none;">❌ Xoá tuyến đường</button>
-
     <div id="map"></div>
     <button class="locate-btn" onclick="locateUser()">📍</button>
     
@@ -419,7 +410,7 @@
                 }
             }
 
-            let routeControl = null; // Lưu tuyến đường hiện tại
+            let routingControl; // Lưu trữ tuyến đường
 
             function getDirections() {
                 if (!selectedMarker || !selectedMarker.data) {
@@ -435,6 +426,7 @@
                     return;
                 }
 
+                // Kiểm tra xem trình duyệt có hỗ trợ định vị không
                 if (!navigator.geolocation) {
                     alert("Trình duyệt không hỗ trợ định vị!");
                     return;
@@ -444,96 +436,30 @@
                     (position) => {
                         let userLat = position.coords.latitude;
                         let userLng = position.coords.longitude;
-                        let travelMode = document.getElementById("travel-mode").value; // Lấy phương tiện đã chọn
 
-                        let modeMapping = {
-                            "walking": "foot",
-                            "cycling": "bike",
-                            "driving": "car"
-                        };
-
-                        let apiMode = modeMapping[travelMode] || "foot"; // Mặc định là đi bộ
-
-                        if (routeControl) {
-                            map.removeControl(routeControl); // Xoá tuyến đường cũ nếu có
+                        // Xóa tuyến đường cũ nếu có
+                        if (routingControl) {
+                            map.removeControl(routingControl);
                         }
 
-                        routeControl = L.Routing.control({
+                        // Thêm tuyến đường mới
+                        routingControl = L.Routing.control({
                             waypoints: [
-                                L.latLng(userLat, userLng),
-                                L.latLng(lat, lng)
+                                L.latLng(userLat, userLng), // Vị trí hiện tại
+                                L.latLng(lat, lng)          // Điểm đến
                             ],
-                            router: L.Routing.osrmv1({
-                                serviceUrl: `https://router.project-osrm.org/route/v1/${apiMode}/`
-                            }),
                             routeWhileDragging: true,
-                            showAlternatives: false,
-                            createMarker: function() { return null; },
-                            summaryTemplate: `<div class="route-summary">
-                                <p><strong>Khoảng cách:</strong> {distance}</p>
-                                <p><strong>Thời gian ước tính:</strong> {time}</p>
-                            </div>`,
-                            formatter: new L.Routing.Formatter({
-                                totalDistanceRoundingSensitivity: 100,
-                                units: 'metric'
-                            })
+                            language: "vi", // Hiển thị tiếng Việt
+                            createMarker: function() { return null; } // Ẩn marker mặc định
                         }).addTo(map);
-
-                        routeControl.on('routesfound', function(e) {
-                            let route = e.routes[0];
-                            let summaryText = `
-                                <p><strong>Khoảng cách:</strong> ${(route.summary.totalDistance / 1000).toFixed(2)} km</p>
-                                <p><strong>Thời gian ước tính:</strong> ${(route.summary.totalTime / 60).toFixed(0)} phút</p>
-                            `;
-
-                            document.getElementById("route-info").innerHTML = summaryText;
-
-                            let steps = route.instructions.map(step => `<li>${step.text}</li>`).join("");
-                            document.getElementById("route-steps").innerHTML = `<ul>${steps}</ul>`;
-                        });
                     },
                     (error) => {
                         console.error("Lỗi định vị:", error);
-                        alert("Không thể xác định vị trí của bạn!");
+                        alert("Không thể xác định vị trí của bạn! Hãy kiểm tra quyền truy cập vị trí.");
                     }
                 );
             }
-            function clearRoute() {
-                if (routeControl) {
-                    map.removeControl(routeControl);
-                    routeControl = null;
-                    document.getElementById("route-info").innerHTML = "";
-                    document.getElementById("route-steps").innerHTML = "";
-                }
-            }
 
-            let userMarker = null;
-
-            function trackUserLocation() {
-                if (!navigator.geolocation) {
-                    console.log("Trình duyệt không hỗ trợ theo dõi vị trí.");
-                    return;
-                }
-
-                navigator.geolocation.watchPosition(
-                    (position) => {
-                        let userLatLng = L.latLng(position.coords.latitude, position.coords.longitude);
-
-                        if (!userMarker) {
-                            userMarker = L.marker(userLatLng, { title: "Vị trí của bạn" })
-                                .addTo(map)
-                                .bindPopup("Bạn đang ở đây!")
-                                .openPopup();
-                        } else {
-                            userMarker.setLatLng(userLatLng);
-                        }
-                    },
-                    (error) => console.error("Lỗi theo dõi vị trí:", error),
-                    { enableHighAccuracy: true }
-                );
-            }
-
-            trackUserLocation();
 
             // Gọi loadMarkers khi trang load
             window.onload = function() {
