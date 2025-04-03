@@ -443,15 +443,29 @@
                         }
 
                         // Thêm tuyến đường mới
-                        routingControl = L.Routing.control({
-                            waypoints: [
-                                L.latLng(userLat, userLng), // Vị trí hiện tại
-                                L.latLng(lat, lng)          // Điểm đến
-                            ],
-                            routeWhileDragging: true,
-                            language: "vi", // Hiển thị tiếng Việt
-                            createMarker: function() { return null; } // Ẩn marker mặc định
-                        }).addTo(map);
+                        L.Routing.control({
+                        waypoints: [
+                            L.latLng(userLat, userLng),
+                            L.latLng(lat, lng)
+                        ],
+                        routeWhileDragging: true,
+                        createMarker: function() { return null; }, // Ẩn marker mặc định
+                        formatter: new L.Routing.Formatter({
+                            language: 'en', // Giữ nguyên "en" để tránh lỗi
+                            units: 'metric',
+                            formatInstruction: function(instr) {
+                                let translations = {
+                                    "Head": "Đi thẳng",
+                                    "Continue": "Tiếp tục",
+                                    "Turn left": "Rẽ trái",
+                                    "Turn right": "Rẽ phải",
+                                    "Arrive at destination": "Bạn đã đến nơi"
+                                };
+                                return translations[instr] || instr;
+                            }
+                        })
+                    }).addTo(map);
+
                     },
                     (error) => {
                         console.error("Lỗi định vị:", error);
