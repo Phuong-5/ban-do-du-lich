@@ -14,6 +14,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <!-- Thêm JS của Leaflet Routing Machine -->
     <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+    <!-- Leaflet MarkerCluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+    <!-- Leaflet MarkerCluster JS -->
+    <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
 
     <style>
         /* 🔹 Layout chuẩn */
@@ -53,6 +59,7 @@
         #sidebar-address {
             margin-top: 0px; /* Giảm khoảng cách trên */
             font-size: 16px;
+            font-weight: bold;
             color: #555;
             line-height: 1.2;
             margin-bottom: 0px;
@@ -249,10 +256,10 @@
                 attribution: '&copy; OpenStreetMap contributors'
             }).addTo(map);
 
-    
             var sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZpvmiU7kOaeFAG9sevuBQSK09TtzCgtup51T-XHg5ernaqxd-j9_RCsKcCrrDL_e8Ohjvv6EshzXg/pub?gid=0&single=true&output=csv";
 
             let currentLanguage = "vi"; // Mặc định Tiếng Việt
+            let markerClusterGroup = L.markerClusterGroup();
             let markers = []; // Danh sách marker
             let selectedMarker = null; // Lưu marker đang mở sidebar
 
@@ -317,9 +324,9 @@
 
             // Hiển thị thông tin marker trong sidebar
             function showSidebar(data) {
-                document.getElementById("sidebar-name").innerText = data.Name || "Không có tên";
-                document.getElementById("sidebar-address").innerText = data.Address || "Không có địa chỉ";
-                document.getElementById("sidebar-note").innerText = data.Note || "Không có ghi chú";
+                document.getElementById("sidebar-name").innerText = data.Name || "-----";
+                document.getElementById("sidebar-address").innerText = data.Address || "-----";
+                document.getElementById("sidebar-note").innerText = data.Note || "Chưa có thông tin";
 
                 let sidebarImages = document.getElementById("sidebar-images");
                 sidebarImages.innerHTML = "";
@@ -358,9 +365,9 @@
                 let addressField = `Address_${currentLanguage}`;
                 let noteField = `Note_${currentLanguage}`;
 
-                document.getElementById("sidebar-name").innerText = selectedMarker.data[nameField] || selectedMarker.data.Name_vi || "Không có tên";
-                document.getElementById("sidebar-address").innerText = selectedMarker.data[addressField] || selectedMarker.data.Address_vi || "Không có địa chỉ";
-                document.getElementById("sidebar-note").innerText = selectedMarker.data[noteField] || selectedMarker.data.Note_vi || "Không có ghi chú";
+                document.getElementById("sidebar-name").innerText = selectedMarker.data[nameField] || selectedMarker.data.Name_vi || "-----";
+                document.getElementById("sidebar-address").innerText = selectedMarker.data[addressField] || selectedMarker.data.Address_vi || "-----";
+                document.getElementById("sidebar-note").innerText = selectedMarker.data[noteField] || selectedMarker.data.Note_vi || "Chưa có thông tin";
             }
 
             // Mở modal xem ảnh
@@ -489,6 +496,5 @@
             loadMarkers(); // Gọi khi trang load
         });
     </script>
-    
 </body>
 </html>
