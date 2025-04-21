@@ -209,7 +209,24 @@
         .directions-btn:hover {
             background: #0056b3;
         }
+        /* Thu nhỏ chiều rộng bảng chỉ đường */
+        .leaflet-routing-container {
+            max-width: 200px; /* Điều chỉnh tùy ý, mặc định khoảng 300-350px */
+            font-size: 10px;  /* Giảm kích thước chữ */
+        }
 
+        /* Thu gọn chiều cao từng dòng */
+        .leaflet-routing-container .leaflet-routing-alt {
+            padding: 6px 8px;
+        }
+
+        .leaflet-routing-container h2 {
+            font-size: 10px;
+        }
+
+        .leaflet-routing-container .leaflet-routing-instruction {
+            padding: 2px 0;
+        }
 
     </style>
 </head>
@@ -252,7 +269,7 @@
                 zoomControl: false,
                 minZoom: 17,
                 maxZoom: 18
-            }).setView([10.751191, 106.673037], 16)
+            }).setView([10.752226, 106.676690], 16)
               .setMaxBounds([[10.754359, 106.662622], [10.748590, 106.679998]]);
     
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
