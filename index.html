@@ -38,20 +38,23 @@
             padding: 1px;
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
             overflow-y: auto;
-            display: none;
             flex-direction: column;
-            align-items: center; /* Chỉnh từ left -> flex-start */
+            align-items: center;
             position: absolute;
             top: 0;
-            left: 0;
+            left: -300px; /* Ẩn ban đầu */
             height: 100vh;
             z-index: 1000;
+            transition: left 0.3s ease-in-out; /* Hiệu ứng trượt */
+        }
+        #sidebar.show {
+            left: 0; /* Khi có class show thì trượt vào */
         }
 
         #sidebar-name {
             margin-bottom: 15px; /* Giảm khoảng cách dưới */
             text-align: center;
-            font-size: 18px;
+            font-size: 35px;
             font-weight: bold;
             line-height: 1.2; /* Điều chỉnh khoảng cách dòng */
         }
@@ -103,7 +106,7 @@
             font-size: 12px;
             border-radius: 50px;
             position: absolute;
-            top: 16px;
+            top: 5px;
             right: 8px;
         }
         .images-container {
@@ -207,6 +210,7 @@
             background: #0056b3;
         }
 
+
     </style>
 </head>
 <body>
@@ -248,7 +252,7 @@
                 zoomControl: false,
                 minZoom: 17,
                 maxZoom: 18
-            }).setView([10.751483, 106.674254], 16)
+            }).setView([10.752226, 106.676690], 16)
               .setMaxBounds([[10.754359, 106.662622], [10.748590, 106.679998]]);
     
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -350,7 +354,7 @@
                     });
                 }
                 // Hiển thị sidebar
-                document.getElementById("sidebar").style.display = "flex";
+                document.getElementById("sidebar").classList.add("show");
 
                 // Hiển thị nút chỉ đường
                 document.getElementById("directions-btn").style.display = "block";
@@ -392,7 +396,7 @@
 
             // Ẩn sidebar
             function hideSidebar() {
-                document.getElementById("sidebar").style.display = "none";
+                document.getElementById("sidebar").classList.remove("show");
             }
 
             // Xác định vị trí người dùng
