@@ -206,7 +206,28 @@
         .directions-btn:hover {
             background: #0056b3;
         }
-
+        @media (max-width: 768px) {
+            #sidebar {
+                width: 100vw;
+                height: auto;
+                max-height: 100vh;
+                box-shadow: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 1000;
+                overflow-y: scroll;
+                padding-bottom: 60px; /* tránh nút che mất nội dung */
+            }
+        
+            .sidebar-image {
+                width: 100%;
+            }
+        
+            #map {
+                height: 100vh;
+            }
+        }
 
     </style>
 </head>
