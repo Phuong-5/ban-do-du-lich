@@ -459,12 +459,17 @@
                             L.latLng(lat, lng)
                         ],
                         routeWhileDragging: true,
-                        createMarker: function() { return null; }, // Ẩn marker mặc định
-                        formatter: new L.Routing.Formatter({
-                            language: 'en', // Giữ nguyên "en" để tránh lỗi
-                            units: 'metric',
-                            formatInstruction: function(instr) {
-                                let translations = {
+                        createMarker: function () { return null; }, // Ẩn marker mặc định
+
+                        formatter: Object.assign(new L.Routing.Formatter(), {
+                            formatInstruction: function (instr) {
+                                let text = instr.text;
+
+                                const fullPhrases = {
+                                    "You have arrived at your destination": "Bạn đã đến nơi"
+                                };
+
+                                const translations = {
                                     "Head": "Đi thẳng",
                                     "Continue": "Tiếp tục",
                                     "Turn left": "Rẽ trái",
@@ -475,16 +480,31 @@
                                     "Sharp right": "Rẽ gắt phải",
                                     "Enter": "Vào",
                                     "Exit": "Ra",
-                                    "Arrive": "Đến nơi",
                                     "Take the": "Đi theo",
+                                    "and take the": "và đi theo",
+                                    "onto": "vào",
+                                    "on the right": "ở bên phải",
+                                    "on the left": "ở bên trái",
+                                    "Destination": "Điểm đến",
+                                    "northeast on": "hướng Đông Bắc",
+                                    "traffic circle": "vòng xoay",
+                                    "4th exit": "đường 4",
+                                    "You have arrived": "Bạn đã đến nơi"
                                 };
-                                let instruction = instr.text;
-                                Object.keys(translations).forEach(key => {
-                                    if (instruction.includes(key)) {
-                                        instruction = instruction.replace(key, translations[key]);
+
+                                Object.keys(fullPhrases).forEach(key => {
+                                    if (text.includes(key)) {
+                                        text = text.replace(key, fullPhrases[key]);
                                     }
                                 });
-                                return instruction;
+
+                                Object.keys(translations).forEach(key => {
+                                    if (text.includes(key)) {
+                                        text = text.replace(key, translations[key]);
+                                    }
+                                });
+
+                                return text;
                             }
                         })
                     }).addTo(map);
