@@ -199,7 +199,7 @@
             background: #007bff;
             color: white;
             border: none;
-            padding: 6px 15 px;
+            padding: 8px 10px;
             cursor: pointer;
             font-size: 14px;
             border-radius: 5px;
@@ -469,9 +469,22 @@
                                     "Continue": "Tiếp tục",
                                     "Turn left": "Rẽ trái",
                                     "Turn right": "Rẽ phải",
-                                    "Arrive at destination": "Bạn đã đến nơi"
+                                    "Slight left": "Chếch trái",
+                                    "Slight right": "Chếch phải",
+                                    "Sharp left": "Rẽ gắt trái",
+                                    "Sharp right": "Rẽ gắt phải",
+                                    "Enter": "Vào",
+                                    "Exit": "Ra",
+                                    "Arrive": "Đến nơi",
+                                    "Take the": "Đi theo",
                                 };
-                                return translations[instr] || instr;
+                                let instruction = instr.text;
+                                Object.keys(translations).forEach(key => {
+                                    if (instruction.includes(key)) {
+                                        instruction = instruction.replace(key, translations[key]);
+                                    }
+                                });
+                                return instruction;
                             }
                         })
                     }).addTo(map);
@@ -491,9 +504,11 @@
             };
 
             // Xuất các hàm ra global để sử dụng trên HTML
-            window.locateUser = locateUser;
-            window.hideSidebar = hideSidebar;
             window.changeLanguage = changeLanguage;
+            window.hideSidebar = hideSidebar;
+            window.openModal = openModal;
+            window.closeModal = closeModal;
+            window.locateUser = locateUser;
             window.getDirections = getDirections;
 
             loadMarkers(); // Gọi khi trang load
