@@ -52,7 +52,7 @@
         
         #sidebar {
             position: relative;
-            width: 250px;
+            width: 200px;
             max-height: 70vh;
             background: white;
             padding: 15px;
@@ -70,6 +70,10 @@
             font-size: 24px;
             font-weight: bold;
             line-height: 1.2; /* Điều chỉnh khoảng cách dòng */
+        }
+        
+        #sidebar h2 {
+            text-align: center;
         }
 
         #sidebar-address {
@@ -91,10 +95,6 @@
             min-width: 0;
             display: block;
         }
-        #sidebar h2 {
-            text-align: center;
-        }
-
         .locate-btn {
             position: absolute;
             bottom: 20px;
@@ -145,6 +145,17 @@
             aspect-ratio: 1 / 1;  /* Đảm bảo luôn là hình vuông */
             object-fit: cover;
         }
+        /* Màu chữ marker*/
+        .marker-label {
+            color: rgb(197, 3, 3); /* Hoặc đổi sang màu bạn muốn, ví dụ: red, white... */
+            font-size: 12px;
+            text-shadow:
+                -1px -1px 0 white,
+                1px -1px 0 white,
+                -1px  1px 0 white,
+                1px  1px 0 white;
+        }
+
         .marker-image {
             width: 100px;
             height: auto;
@@ -249,6 +260,8 @@
             padding: 2px 0;
         }
 
+
+
     </style>
 </head>
 <body>
@@ -290,10 +303,10 @@
     
             const map = L.map('map', {
                 zoomControl: false,
-                minZoom: 17,
+                minZoom: 16,
                 maxZoom: 18
-            }).setView([10.751054, 106.671319], 16)
-              .setMaxBounds([[10.754359, 106.662622], [10.748590, 106.679998]]);
+            }).setView([10.751054, 106.671319], 13);
+              //.setMaxBounds([[10.754359, 106.662622], [10.748590, 106.679998]]);
     
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors'
@@ -336,7 +349,7 @@
                                         className: '',
                                         html: `<div style="text-align:center;">
                                                 <img src="${avatar}" class="marker-avatar">
-                                                <div><b>${m[nameKey] || m.Name_vi}</b></div>
+                                                <div class="marker-label"><b>${m[nameKey] || m.Name_vi}</b></div>
                                             </div>`,
                                         iconSize: [100, 80]
                                     });
