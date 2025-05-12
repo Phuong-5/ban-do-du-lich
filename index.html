@@ -305,13 +305,14 @@
                 zoomControl: false,
                 minZoom: 16,
                 maxZoom: 18
-            }).setView([10.751054, 106.671319], 13);
+            }).setView([10.751054, 106.671319], 14);
               //.setMaxBounds([[10.754359, 106.662622], [10.748590, 106.679998]]);
     
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors'
             }).addTo(map);
             
+
             //Link lưu trữ dữ liệu của Marker (cập nhật trên Google Sheets)
             var sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZpvmiU7kOaeFAG9sevuBQSK09TtzCgtup51T-XHg5ernaqxd-j9_RCsKcCrrDL_e8Ohjvv6EshzXg/pub?gid=0&single=true&output=csv";
 
@@ -579,6 +580,95 @@
                 );
             }
 
+            // Thêm viền bao quanh khu vực chỉ định
+            // =======================
+            const boundaryCoords = [
+            [10.754178, 106.676908],
+            [10.752925, 106.672265],
+            [10.752493, 106.666757],
+            [10.750153, 106.666939],
+            [10.749691, 106.669078],
+            [10.749303, 106.669594],
+            [10.749378, 106.671491],
+            [10.748781, 106.673175],
+            [10.748722, 106.674920],
+            [10.749586, 106.676346],
+            [10.751807, 106.677256],
+            [10.753373, 106.677120],
+            [10.754178, 106.676892], // đóng kín polygon
+            ];
+
+            // Vẽ đường viền gốc nhạt hoặc ẩn đi
+            const boundary = L.polygon(boundaryCoords, {
+            color: 'red', // hoặc 'red' với fillOpacity thấp
+            weight: 2,
+            fillColor: '#f02',
+            fillOpacity: 0.02
+            }).addTo(map).bindPopup("Phường 5 Quận 5");
+
+            map.fitBounds(boundary.getBounds());
+
+            // Hàm tính khoảng cách giữa 2 điểm theo mét
+            function distance(latlng1, latlng2) {
+            return map.distance(latlng1, latlng2);
+            }
+
+            // Hàm nội suy điểm giữa A và B theo t (0 <= t <= 1)
+            function interpolate(latlng1, latlng2, t) {
+            const lat = latlng1[0] + (latlng2[0] - latlng1[0]) * t;
+            const lng = latlng1[1] + (latlng2[1] - latlng1[1]) * t;
+            return [lat, lng];
+            }
+
+            // Tạo ngôi sao tại vị trí lat/lng
+            function createStar(lat, lng, outerRadius, innerRadius, numPoints = 5) {
+            const points = [];
+            const angleStep = Math.PI / numPoints;
+            for (let i = 0; i < numPoints * 2; i++) {
+                const angle = i * angleStep - Math.PI / 2;
+                const radius = i % 2 === 0 ? outerRadius : innerRadius;
+
+                const dx = (radius / 111320) * Math.cos(angle);
+                const dy = (radius / 110540) * Math.sin(angle);
+                points.push([lat + dy, lng + dx]);
+            }
+            points.push(points[0]);
+            return points;
+            }
+
+            // === Tạo ngôi sao dọc theo polygon ===
+            const stepDistance = 20; // đơn vị: mét
+
+            for (let i = 0; i < boundaryCoords.length - 1; i++) {
+            const start = boundaryCoords[i];
+            const end = boundaryCoords[i + 1];
+            const segmentLength = distance(start, end);
+            const numSteps = Math.floor(segmentLength / stepDistance);
+
+            for (let j = 0; j <= numSteps; j++) {
+                const t = j / numSteps;
+                const [lat, lng] = interpolate(start, end, t);
+
+            // Vẽ hình ngôi sao
+                const star = L.polygon(createStar(lat, lng, 1.5, 4), {
+                color: 'orange',
+                fillColor: 'yellow',
+                fillOpacity: 0.9,
+                weight: 1,
+                }).addTo(map).bindPopup("Phường 5 Quận 5");
+                
+            // Vẽ hình tròn bao quanh ngôi sao
+                const circle = L.circle([lat, lng], {
+                radius: '6', // mét
+                color: 'red',
+                weight: 1,
+                fillOpacity: 1 // không tô màu trong
+                }).addTo(map).bindPopup("Phường 5 Quận 5");
+
+                // Đưa ngôi sao lên trên hình tròn
+                star.bringToFront();
+            }
+            }
 
             // Gọi loadMarkers khi trang load
             window.onload = function() {
