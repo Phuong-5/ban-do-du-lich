@@ -350,15 +350,52 @@
                                     let addressKey = `Address_${currentLanguage}`;
                                     let noteKey = `Note_${currentLanguage}`;
 
+                                    //// Tạo icon cho marker
+                                    let labelTop = m.LabelTop || null;
+                                    let labelLeft = m.LabelLeft || null;
+
+                                    let isVertical = labelTop !== null && labelTop !== '' && labelTop !== undefined;
+
+                                    // Nếu label ngang thì dùng flex để căn chữ và icon hàng ngang
+                                    let html = isVertical ? `
+                                    <div style="text-align:center; position: relative;">
+                                        <img src="${avatar}" class="marker-avatar">
+                                        <div class="marker-label" style="
+                                            position: absolute;
+                                            top: ${labelTop};
+                                            left: ${labelLeft || '0px'};
+                                            color: red;
+                                            font-weight: bold;
+                                            text-align: cent;
+                                            white-space: normal;
+                                            word-break: break-word;
+                                            max-width: 120px;
+                                        ">
+                                        ${m[nameKey] || m.Name_vi}
+                                        </div>
+                                    </div>
+                                    ` : `
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <img src="${avatar}" class="marker-avatar">
+                                        <div class="marker-label" style="
+                                            color: red;
+                                            font-weight: bold;
+                                            white-space: nowrap;
+                                        ">
+                                        ${m[nameKey] || m.Name_vi}
+                                        </div>
+                                    </div>
+                                    `;
+
                                     let icon = L.divIcon({
-                                        className: '',
-                                        html: `<div style="text-align:center;">
-                                                <img src="${avatar}" class="marker-avatar">
-                                                <div class="marker-label"><b>${m[nameKey] || m.Name_vi}</b></div>
-                                            </div>`,
-                                        iconSize: [100, 80]
+                                    className: '',
+                                    html: html,
+                                    iconSize: [100, 80]
                                     });
 
+
+
+                                    //// Tạo marker và thêm vào bản đồ
                                     let marker = L.marker([lat, lng], { icon }).addTo(map);
                                     markers.push(marker);
 
