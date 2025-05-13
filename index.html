@@ -761,8 +761,8 @@
 
                 const flower = createSunflower(lat, lng, 8, 2, 12);
                 flower.petals.forEach(petal => petal.addTo(map));
-                flower.center.addTo(map);
-                flower.innerCenter.addTo(map)
+                flower.center.addTo(map).bindPopup("Phường 5 Quận 5");
+                flower.innerCenter.addTo(map).bindPopup("Phường 5 Quận 5")
             }
             }
 
