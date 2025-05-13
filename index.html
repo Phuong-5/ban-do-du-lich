@@ -424,7 +424,7 @@
             // Hiển thị thông tin marker trong sidebar
             function showSidebar(data) {
                 document.getElementById("sidebar-name").innerText = data.Name || "-----";
-                document.getElementById("sidebar-address").innerText = data.Address || "-----";
+                document.getElementById("sidebar-address").innerHTML = data.Address || "-----";
                 document.getElementById("sidebar-note").innerText = data.Note || "Chưa có thông tin";
                 document.getElementById("overlay").classList.add("show");
 
