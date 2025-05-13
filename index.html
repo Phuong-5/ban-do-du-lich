@@ -19,6 +19,10 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
     <!-- Leaflet MarkerCluster JS -->
     <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+    <!-- Thêm CSS và JS của Leaflet.Elastic -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-elastic@1.0.0/dist/leaflet-elastic.css" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-elastic@1.0.0/dist/leaflet-elastic.min.js"></script>
+
 
 
     <style>
@@ -620,24 +624,92 @@
             return [lat, lng];
             }
 
-            // Tạo ngôi sao tại vị trí lat/lng
-            function createStar(lat, lng, outerRadius, innerRadius, numPoints = 5) {
-            const points = [];
-            const angleStep = Math.PI / numPoints;
-            for (let i = 0; i < numPoints * 2; i++) {
-                const angle = i * angleStep - Math.PI / 2;
-                const radius = i % 2 === 0 ? outerRadius : innerRadius;
+            // Tạo hoa hướng dương tại vị trí lat/lng
+            function createEllipse(center, radii, rotation, options = {}) {
+                const points = [];
+                const steps = 60;
 
-                const dx = (radius / 111320) * Math.cos(angle);
-                const dy = (radius / 110540) * Math.sin(angle);
-                points.push([lat + dy, lng + dx]);
-            }
-            points.push(points[0]);
-            return points;
+                const angleRad = rotation * Math.PI / 180;
+                const lat = center[0];
+                const lng = center[1];
+                const rx = radii[0] / 111320;
+                const ry = radii[1] / 110540;
+
+                for (let i = 0; i <= steps; i++) {
+                    const theta = 2 * Math.PI * (i / steps);
+                    const x = rx * Math.cos(theta);
+                    const y = ry * Math.sin(theta);
+
+                    const rotatedX = x * Math.cos(angleRad) - y * Math.sin(angleRad);
+                    const rotatedY = x * Math.sin(angleRad) + y * Math.cos(angleRad);
+
+                    const point = [lat + rotatedY, lng + rotatedX];
+                    points.push(point);
+                }
+
+                return L.polygon(points, options);
             }
 
-            // === Tạo ngôi sao dọc theo polygon ===
-            const stepDistance = 20; // đơn vị: mét
+            // 2. Sau đó mới tới createSunflower
+            function createSunflower(lat, lng, petalLength = 8, petalWidth = 4, numPetals = 12) {
+                const petals = [];
+                const angleStep = 2 * Math.PI / numPetals;
+
+                // Lớp ngoài: cánh lớn
+                for (let i = 0; i < numPetals; i++) {
+                    const angle = angleStep * i;
+                    const midX = (petalLength / 111320) * Math.cos(angle);
+                    const midY = (petalLength / 110540) * Math.sin(angle);
+                    const center = [lat + midY, lng + midX];
+
+                    const petal = createEllipse(center, [petalLength, petalWidth], angle * 180 / Math.PI, {
+                        color: 'darkorange',
+                        fillColor: 'gold',
+                        fillOpacity: 0.9,
+                        weight: 1,
+                    });
+                    petals.push(petal);
+                }
+
+                // Lớp trong: cánh nhỏ, lệch góc để xen kẽ
+                const innerPetalLength = petalLength * 1;
+                const innerPetalWidth = petalWidth * 1;
+
+                for (let i = 0; i < numPetals; i++) {
+                    const angle = angleStep * i + angleStep / 2;  // lệch nửa bước
+                    const midX = (innerPetalLength / 111320) * Math.cos(angle);
+                    const midY = (innerPetalLength / 110540) * Math.sin(angle);
+                    const center = [lat + midY, lng + midX];
+
+                    const petal = createEllipse(center, [innerPetalLength, innerPetalWidth], angle * 180 / Math.PI, {
+                        color: 'darkorange',
+                        fillColor: 'yellow',
+                        fillOpacity: 0.8,
+                        weight: 1,
+                    });
+                    petals.push(petal);
+                }
+
+                // Nhụy hoa
+                const centerCircle = L.circle([lat, lng], {
+                    radius: 6,
+                    color: 'brown',
+                    fillColor: 'darkred',
+                    fillOpacity: 10
+                });
+
+                const innerCircle = L.circle([lat, lng], {
+                    radius: 1,
+                    color: 'darkred',
+                    fillColor: 'darkred',
+                    fillOpacity: 1
+                });
+
+                return { petals, center: centerCircle, innerCenter: innerCircle };
+            }
+
+            // === Tạo bông hoa dọc theo polygon ===
+            const stepDistance = 40; // đơn vị: mét
 
             for (let i = 0; i < boundaryCoords.length - 1; i++) {
             const start = boundaryCoords[i];
@@ -649,24 +721,10 @@
                 const t = j / numSteps;
                 const [lat, lng] = interpolate(start, end, t);
 
-            // Vẽ hình ngôi sao
-                const star = L.polygon(createStar(lat, lng, 1.5, 4), {
-                color: 'orange',
-                fillColor: 'yellow',
-                fillOpacity: 0.9,
-                weight: 1,
-                }).addTo(map).bindPopup("Phường 5 Quận 5");
-                
-            // Vẽ hình tròn bao quanh ngôi sao
-                const circle = L.circle([lat, lng], {
-                radius: '6', // mét
-                color: 'red',
-                weight: 1,
-                fillOpacity: 1 // không tô màu trong
-                }).addTo(map).bindPopup("Phường 5 Quận 5");
-
-                // Đưa ngôi sao lên trên hình tròn
-                star.bringToFront();
+                const flower = createSunflower(lat, lng, 8, 2, 12);
+                flower.petals.forEach(petal => petal.addTo(map));
+                flower.center.addTo(map);
+                flower.innerCenter.addTo(map)
             }
             }
 
