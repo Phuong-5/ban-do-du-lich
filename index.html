@@ -393,8 +393,6 @@
                                     iconSize: [100, 80]
                                     });
 
-
-
                                     //// Tạo marker và thêm vào bản đồ
                                     let marker = L.marker([lat, lng], { icon }).addTo(map);
                                     markers.push(marker);
@@ -555,63 +553,64 @@
                             map.removeControl(routingControl);
                         }
 
-                        // Thêm tuyến đường mới
-                        L.Routing.control({
-                        waypoints: [
-                            L.latLng(userLat, userLng),
-                            L.latLng(lat, lng)
-                        ],
-                        routeWhileDragging: true,
-                        createMarker: function () { return null; }, // Ẩn marker mặc định
+                        // Tạo tuyến đường mới và lưu vào biến routingControl
+                        routingControl = L.Routing.control({
+                            waypoints: [
+                                L.latLng(userLat, userLng),
+                                L.latLng(lat, lng)
+                            ],
+                            routeWhileDragging: true,
+                            createMarker: function () { return null; }, // Ẩn marker mặc định
 
-                        formatter: Object.assign(new L.Routing.Formatter(), {
-                            formatInstruction: function (instr) {
-                                let text = instr.text;
+                            formatter: Object.assign(new L.Routing.Formatter(), {
+                                formatInstruction: function (instr) {
+                                    let text = instr.text;
 
-                                const fullPhrases = {
-                                    "You have arrived at your destination": "Bạn đã đến nơi"
-                                };
+                                    const fullPhrases = {
+                                        "You have arrived at your destination": "Bạn đã đến nơi"
+                                    };
 
-                                const translations = {
-                                    "Head": "Đi thẳng",
-                                    "Continue": "Tiếp tục",
-                                    "Turn left": "Rẽ trái",
-                                    "Turn right": "Rẽ phải",
-                                    "Slight left": "Chếch trái",
-                                    "Slight right": "Chếch phải",
-                                    "Sharp left": "Rẽ gắt trái",
-                                    "Sharp right": "Rẽ gắt phải",
-                                    "Enter": "Vào",
-                                    "Exit": "Ra",
-                                    "Take the": "Đi theo",
-                                    "and take the": "và đi theo",
-                                    "onto": "vào",
-                                    "on the right": "ở bên phải",
-                                    "on the left": "ở bên trái",
-                                    "Destination": "Điểm đến",
-                                    "northeast on": "hướng Đông Bắc",
-                                    "traffic circle": "vòng xoay",
-                                    "4th exit": "đường 4",
-                                    "2nd exit": "đường 2",
-                                    "You have arrived": "Bạn đã đến nơi"
-                                };
+                                    const translations = {
+                                        "Head": "Đi thẳng",
+                                        "Continue": "Tiếp tục",
+                                        "Turn left": "Rẽ trái",
+                                        "Turn right": "Rẽ phải",
+                                        "Slight left": "Chếch trái",
+                                        "Slight right": "Chếch phải",
+                                        "Sharp left": "Rẽ gắt trái",
+                                        "Sharp right": "Rẽ gắt phải",
+                                        "Enter": "Vào",
+                                        "Exit": "Ra",
+                                        "Take the": "Đi theo",
+                                        "and take the": "và đi theo",
+                                        "onto": "vào",
+                                        "on the right": "ở bên phải",
+                                        "on the left": "ở bên trái",
+                                        "Destination": "Điểm đến",
+                                        "northeast on": "hướng Đông Bắc",
+                                        "traffic circle": "vòng xoay",
+                                        "4th exit": "đường 4",
+                                        "2nd exit": "đường 2",
+                                        "You have arrived": "Bạn đã đến nơi"
+                                    };
 
-                                Object.keys(fullPhrases).forEach(key => {
-                                    if (text.includes(key)) {
-                                        text = text.replace(key, fullPhrases[key]);
-                                    }
-                                });
+                                    Object.keys(fullPhrases).forEach(key => {
+                                        if (text.includes(key)) {
+                                            text = text.replace(key, fullPhrases[key]);
+                                        }
+                                    });
 
-                                Object.keys(translations).forEach(key => {
-                                    if (text.includes(key)) {
-                                        text = text.replace(key, translations[key]);
-                                    }
-                                });
+                                    Object.keys(translations).forEach(key => {
+                                        if (text.includes(key)) {
+                                            text = text.replace(key, translations[key]);
+                                        }
+                                    });
 
-                                return text;
-                            }
-                        })
-                    }).addTo(map);
+                                    return text;
+                                }
+                            })
+                        }).addTo(map); // <-- Quan trọng: lưu vào biến routingControl
+
 
                     },
                     (error) => {
